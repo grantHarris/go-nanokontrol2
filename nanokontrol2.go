@@ -29,15 +29,15 @@ import "github.com/rakyll/portmidi"
    * R Button 64 - 71
    */
   
-const REFRESH_RATE = 50
+const REFRESH_RATE = 10
 
 type Nanokontrol struct{
-  state []float32
+  state []float64
   in *portmidi.Stream
 }
 
 
-func (n *Nanokontrol) Get(index uint8) float32{
+func (n *Nanokontrol) Get(index uint8) float64{
 	return n.state[index]
 }
 
@@ -56,11 +56,11 @@ func (n *Nanokontrol) Poll(){
                 }
                 for b := range msg {
                     event := msg[b]
-                    n.state[event.Data1] = float32(event.Data2) / 127
+                    n.state[event.Data1] = float64(event.Data2) / 127
                 }
             }
         }
-        time.Sleep(REFRESH_RATE)
+        time.Sleep(time.Second / REFRESH_RATE)
     }
 }
 
@@ -70,7 +70,7 @@ func midiStream() *portmidi.Stream{
     if portmidi.CountDevices() == 0{
         log.Printf("No MIDI controller found")
     }else{
-        log.Printf("midi found")
+        log.Printf("MIDI controller found")
         midistream, err := portmidi.NewInputStream(portmidi.DefaultInputDeviceID(), 1024)
         if err != nil {
             log.Fatal(err)
@@ -81,7 +81,7 @@ func midiStream() *portmidi.Stream{
 }
 
 func Initialize() *Nanokontrol{
-  n := Nanokontrol{make([]float32, 71), midiStream()}
+  n := Nanokontrol{make([]float64, 71), midiStream()}
   go n.Poll()
   return &n
 }
